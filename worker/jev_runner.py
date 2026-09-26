@@ -118,6 +118,34 @@ def execute(request):
     if target.get("targetId") != request["targetId"] or target.get("browserId") != os.environ["FASTEST_E2E_BROWSER_ID"]:
         raise BridgeError("target", "The adapter does not own this task tab.")
     require_target(request["targetId"], cdp)
+
+    # -- OpenJEV support (additive; TypeSafe stays the default) -----------------
+    # Provider selection rule:
+    #   1. JEV_PROVIDER=openjev  -> OpenJEV
+    #   2. TYPESAFE_API_KEY set  -> TypeSafe (unchanged default)
+    #   3. Only OPENJEV_API_KEY  -> OpenJEV
+    # jev_ultrafast hardcodes the TypeSafe endpoint and reads TYPESAFE_API_KEY /
+    # TYPESAFE_MODEL from the environment.  When OpenJEV is selected we alias the
+    # OpenJEV key into TYPESAFE_API_KEY (so jev_ultrafast finds it), set the model
+    # id to "openjev", and redirect the request URL to the OpenJEV gateway via a
+    # lightweight post_json patch.  Anyone with a TypeSafe key sees zero change.
+    import jev_ultrafast.model as _jev_model
+    _openjev_host = "https://api.openjev.sh/v1/systemone"
+    _use_openjev = (
+        os.environ.get("JEV_PROVIDER") == "openjev"
+        or (not os.environ.get("TYPESAFE_API_KEY") and os.environ.get("OPENJEV_API_KEY"))
+    )
+    if _use_openjev:
+        os.environ.setdefault("TYPESAFE_API_KEY", os.environ["OPENJEV_API_KEY"])
+        os.environ.setdefault("TYPESAFE_MODEL", "openjev")
+        _original_post_json = _jev_model.post_json
+
+        def _openjev_post_json(url, key, body):
+            return _original_post_json(_openjev_host, key, {**body, "model": "openjev"})
+
+        _jev_model.post_json = _openjev_post_json
+    # ------------------------------------------------------------------------
+
     import jev_ultrafast.agent as upstream
     from jev_ultrafast.browser import Browser, StalePage
     old_browser, old_choose, old_text = upstream.Browser, upstream.choose, upstream.field_text

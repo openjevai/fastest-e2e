@@ -42,7 +42,11 @@ function pageCall(session: host.Session, journal: Journal, job: Omit<PageJob, "r
 }
 function jevCall(session: host.Session, journal: Journal, goal: string, timeoutMs: number) {
   return Effect.gen(function* () {
-    if (!process.env.TYPESAFE_API_KEY) return yield* Effect.fail(new BrowserError({ code: "credentials", reason: "Set TYPESAFE_API_KEY in the invoking environment, or use explicit deterministic steps." }));
+    const jevProvider = process.env.JEV_PROVIDER;
+    const hasTypesafeKey = Boolean(process.env.TYPESAFE_API_KEY);
+    const hasOpenjevKey = Boolean(process.env.OPENJEV_API_KEY);
+    const jevConfigured = jevProvider === "openjev" ? hasOpenjevKey : (hasTypesafeKey || (!hasTypesafeKey && hasOpenjevKey));
+    if (!jevConfigured) return yield* Effect.fail(new BrowserError({ code: "credentials", reason: "Set TYPESAFE_API_KEY (or OPENJEV_API_KEY / JEV_PROVIDER=openjev) in the invoking environment, or use explicit deterministic steps." }));
     const env = yield* io(() => workerEnv(session, journal));
     return yield* subprocess(host.pythonExecutable(), [path.join(host.packageRoot, "worker/jev_runner.py")], env,
       JSON.stringify({ root: host.home(), runId: journal.runId, targetId: journal.state().targetId, goal }), timeoutMs)

@@ -73,11 +73,11 @@ export class BrowserRuntime extends Context.Service<BrowserRuntime, {
       let reason = "";
       try { session = await host.connect(); } catch (error) { reason = error instanceof Error ? error.message : "No configured connection."; }
       return { configured, workerInstalled, connected: session !== undefined, browserId: session?.browserId ?? "",
-        jevKeyPresent: Boolean(process.env.TYPESAFE_API_KEY), textKeyPresent: Boolean(process.env.TEXT_MODEL_API_KEY), reason,
+        jevKeyPresent: Boolean(process.env.TYPESAFE_API_KEY), openjevKeyPresent: Boolean(process.env.OPENJEV_API_KEY), textKeyPresent: Boolean(process.env.TEXT_MODEL_API_KEY), reason,
         capabilities: { deterministic: true, scopedAssertions: true, screenshots: true, durableRuns: true,
           vision: { installed: true, enabled: (await host.configuration().catch(() => null))?.visionEnabled === true,
             configured: ["MIDSCENE_MODEL_API_KEY", "MIDSCENE_MODEL_BASE_URL", "MIDSCENE_MODEL_NAME", "MIDSCENE_MODEL_FAMILY"].every(k => !!process.env[k]), providerTested: false },
-          jev: { installed: workerInstalled, keyPresent: Boolean(process.env.TYPESAFE_API_KEY), providerTested: false } } };
+          jev: { installed: workerInstalled, keyPresent: Boolean(process.env.TYPESAFE_API_KEY || process.env.OPENJEV_API_KEY), providerTested: false } } };
     });
     return { run, test, inspect, close, harness, doctor };
   }),
@@ -92,7 +92,7 @@ export const stop = withSession(session => worker(session, { op: "stop" }, 30_00
 
 export const install = locked(() => {
   const env: NodeJS.ProcessEnv = { ...process.env, UV_PROJECT_ENVIRONMENT: path.join(host.home(), "worker-venv") };
-  delete env.TYPESAFE_API_KEY; delete env.TEXT_MODEL_API_KEY;
+  delete env.TYPESAFE_API_KEY; delete env.OPENJEV_API_KEY; delete env.TEXT_MODEL_API_KEY;
   for (const key of Object.keys(env)) if (key.startsWith("MIDSCENE_")) delete env[key];
   return subprocess("uv", ["sync", "--project", path.join(host.packageRoot, "worker"), "--python", "3.12", "--no-dev", "--locked"],
     env, "", 180_000).pipe(Effect.as({ ok: true }));

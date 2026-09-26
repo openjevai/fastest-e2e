@@ -2,6 +2,8 @@
 
 Browser use and evidence-based E2E tests from a coding agent, CLI, or MCP. Use a dedicated, logged-in Chrome profile, normally headless. Application setup and cleanup stay in the UI.
 
+> **OpenJEV support:** Jev is built by [TypeSafe](https://typesafe.ai). This fork keeps TypeSafe as the default and adds optional support for [OpenJEV](https://openjev.sh), a free community gateway to the same Jev model — set `OPENJEV_API_KEY` (or `JEV_PROVIDER=openjev`) to use it. Original project: https://github.com/BleedingDev/fastest-e2e by @BleedingDev.
+
 ```mermaid
 flowchart LR
     Agent["You / coding agent"] --> Run["Effect CLI + MCP / durable run"]

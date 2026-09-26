@@ -26,6 +26,8 @@ Supply `TYPESAFE_API_KEY` and `TEXT_MODEL_API_KEY` through the invoking process 
 node --env-file=.env dist/cli.js doctor
 ```
 
+**OpenJEV (optional):** TypeSafe stays the default. To use the free community gateway instead, set `OPENJEV_API_KEY` (or `JEV_PROVIDER=openjev`). When only `OPENJEV_API_KEY` is present and `TYPESAFE_API_KEY` is absent, OpenJEV is used automatically. The worker redirects Jev requests to the OpenJEV endpoint with model `openjev`; no TypeSafe behaviour changes when a TypeSafe key is set.
+
 Jev is pinned to a Git revision; its dependency pins Browser Harness 0.1.13. `install` uses the committed uv lock and installs outside the package, in the selected home. It must complete before browser tasks. A locked install never upgrades dependencies during a task.
 
 ## Log in, then run headless

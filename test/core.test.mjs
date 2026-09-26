@@ -42,13 +42,14 @@ test("the same port with another browser ID fails closed", () => {
 test("the worker cannot inherit another daemon, endpoint or cloud credentials", () => {
   const session = { browserId: "expected", wsUrl: "ws://127.0.0.1:9333/devtools/browser/expected", namespace: "abc", profileDir: "/dedicated" };
   const env = workerEnvironment(session, { BU_CDP_URL: "http://personal:9222", BU_CDP_WS: "ws://personal",
-    BU_NAME: "default", BH_RUNTIME_DIR: "/shared", BH_HOME: "/personal", BROWSER_USE_API_KEY: "private", TYPESAFE_API_KEY: "preserve" });
+    BU_NAME: "default", BH_RUNTIME_DIR: "/shared", BH_HOME: "/personal", BROWSER_USE_API_KEY: "private", TYPESAFE_API_KEY: "preserve", OPENJEV_API_KEY: "preserve-oj" });
   assert.equal(env.BU_CDP_URL, undefined);
   assert.equal(env.BH_RUNTIME_DIR, undefined);
   assert.equal(env.BROWSER_USE_API_KEY, undefined);
   assert.equal(env.BU_CDP_WS, session.wsUrl);
   assert.equal(env.BU_NAME, "fe2e-abc");
   assert.equal(env.TYPESAFE_API_KEY, "preserve");
+  assert.equal(env.OPENJEV_API_KEY, "preserve-oj");
   assert.equal(env.BH_RECORD, "0");
 });
 test("session locks serialize callers and only the owner can release", async () => {
